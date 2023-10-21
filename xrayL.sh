@@ -1,6 +1,4 @@
 DEFAULT_START_PORT=20000                         #默认起始端口
-DEFAULT_SOCKS_USERNAME=""                   #默认socks账号
-DEFAULT_SOCKS_PASSWORD=""               #默认socks密码
 DEFAULT_WS_PATH="/ws"                            #默认ws路径
 DEFAULT_UUID=$(cat /proc/sys/kernel/random/uuid) #默认随机UUID
 
@@ -32,6 +30,7 @@ EOF
 	systemctl start xrayL.service
 	echo "Xray 安装完成."
 }
+
 config_xray() {
 	config_type=$1
 	mkdir -p /etc/xrayL
@@ -42,8 +41,7 @@ config_xray() {
 
 	read -p "起始端口 (默认 $DEFAULT_START_PORT): " START_PORT
 	START_PORT=${START_PORT:-$DEFAULT_START_PORT}
-	if [ "$config_type" == "socks" ]; then
-	elif [ "$config_type" == "vmess" ]; then
+	if [ "$config_type" == "vmess" ]; then
 		read -p "UUID (默认随机): " UUID
 		UUID=${UUID:-$DEFAULT_UUID}
 		read -p "WebSocket 路径 (默认 $DEFAULT_WS_PATH): " WS_PATH
@@ -60,9 +58,6 @@ config_xray() {
 			config_content+="auth = \"password\"\n"
 			config_content+="udp = true\n"
 			config_content+="ip = \"${IP_ADDRESSES[i]}\"\n"
-			config_content+="[[inbounds.settings.accounts]]\n"
-			config_content+="user = \"$SOCKS_USERNAME\"\n"
-			config_content+="pass = \"$SOCKS_PASSWORD\"\n"
 		elif [ "$config_type" == "vmess" ]; then
 			config_content+="[[inbounds.settings.clients]]\n"
 			config_content+="id = \"$UUID\"\n"
@@ -87,15 +82,13 @@ config_xray() {
 	echo "生成 $config_type 配置完成"
 	echo "起始端口:$START_PORT"
 	echo "结束端口:$(($START_PORT + $i - 1))"
-	if [ "$config_type" == "socks" ]; then
-		echo "socks账号:""
-		echo "socks密码:""
-	elif [ "$config_type" == "vmess" ]; then
+	if [ "$config_type" == "vmess" ]; then
 		echo "UUID:$UUID"
 		echo "ws路径:$WS_PATH"
 	fi
 	echo ""
 }
+
 main() {
 	[ -x "$(command -v xrayL)" ] || install_xray
 	if [ $# -eq 1 ]; then
@@ -112,4 +105,5 @@ main() {
 		config_xray "socks"
 	fi
 }
+
 main "$@"
