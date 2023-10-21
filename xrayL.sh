@@ -1,6 +1,6 @@
 DEFAULT_START_PORT=20000                         #默认起始端口
-DEFAULT_SOCKS_USERNAME="userb"                   #默认socks账号
-DEFAULT_SOCKS_PASSWORD="passwordb"               #默认socks密码
+DEFAULT_SOCKS_USERNAME=""                   #默认socks账号
+DEFAULT_SOCKS_PASSWORD=""               #默认socks密码
 DEFAULT_WS_PATH="/ws"                            #默认ws路径
 DEFAULT_UUID=$(cat /proc/sys/kernel/random/uuid) #默认随机UUID
 
@@ -93,8 +93,8 @@ config_xray() {
 	echo "起始端口:$START_PORT"
 	echo "结束端口:$(($START_PORT + $i - 1))"
 	if [ "$config_type" == "socks" ]; then
-		echo "socks账号:$SOCKS_USERNAME"
-		echo "socks密码:$SOCKS_PASSWORD"
+		echo "socks账号:""
+		echo "socks密码:""
 	elif [ "$config_type" == "vmess" ]; then
 		echo "UUID:$UUID"
 		echo "ws路径:$WS_PATH"
