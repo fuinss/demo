@@ -70,8 +70,6 @@ config_xray() {
 	fi
 	echo ""
 }
-
-}
 main() {
 	[ -x "$(command -v xrayL)" ] || install_xray
 	if [ $# -eq 1 ]; then
