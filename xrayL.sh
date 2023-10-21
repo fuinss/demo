@@ -19,7 +19,7 @@ Description=XrayL Service
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/xrayL -c /etc/xrayL/config.toml
+ExecStart=/usr/local/bin/xrayL -c /etc/xrayL/config.json
 Restart=on-failure
 User=nobody
 RestartSec=3
@@ -52,32 +52,65 @@ config_xray() {
     fi
 
     for ((i = 0; i < ${#IP_ADDRESSES[@]}; i++)); do
-        config_content+="[[inbounds]]\n"
-        config_content+="port = $((START_PORT + i))\n"
-        config_content+="protocol = \"$config_type\"\n"
-        config_content+="tag = \"tag_$((i + 1))\"\n"
-        config_content+="[inbounds.settings]\n"
-        if [ "$config_type" == "http" ]; then
-            config_content+="udp = true\n"
-            config_content+="ip = \"${IP_ADDRESSES[i]}\"\n"
-        elif [ "$config_type" == "vmess" ]; then
-            config_content+="[[inbounds.settings.clients]]\n"
-            config_content+="id = \"$UUID\"\n"
-            config_content+="[inbounds.streamSettings]\n"
-            config_content+="network = \"ws\"\n"
-            config_content+="[inbounds.streamSettings.wsSettings]\n"
-            config_content+="path = \"$WS_PATH\"\n\n"
+        config_content+="{
+  \"inbounds\": [
+    {
+      \"port\": $((START_PORT + i)),
+      \"protocol\": \"$config_type\",
+      \"settings\": {
+        \"udp\": true
+      },
+      \"tag\": \"tag_$((i + 1))\"
+    }
+  ],
+  \"outbounds\": [
+    {
+      \"protocol\": \"freedom\",
+      \"settings\": {},
+      \"tag\": \"tag_$((i + 1))\"
+    }
+  ],
+  \"routing\": {
+    \"rules\": [
+      {
+        \"type\": \"field\",
+        \"inboundTag\": [
+          \"tag_$((i + 1))\"
+        ],
+        \"outboundTag\": \"tag_$((i + 1))\"
+      }
+    ]
+  }
+}
+"
+        if [ "$config_type" == "vmess" ]; then
+            config_content+=",{
+  \"inbounds\": [
+    {
+      \"protocol\": \"vmess\",
+      \"port\": $((START_PORT + i)),
+      \"tag\": \"tag_$((i + 1))\",
+      \"settings\": {
+        \"clients\": [
+          {
+            \"id\": \"$UUID\"
+          }
+        ]
+      },
+      \"streamSettings\": {
+        \"network\": \"ws\",
+        \"wsSettings\": {
+          \"path\": \"$WS_PATH\"
+        }
+      }
+    }
+  ]
+}"
         fi
-        config_content+="[[outbounds]]\n"
-        config_content+="sendThrough = \"${IP_ADDRESSES[i]}\"\n"
-        config_content+="protocol = \"freedom\"\n"
-        config_content+="tag = \"tag_$((i + 1))\"\n\n"
-        config_content+="[[routing.rules]]\n"
-        config_content+="type = \"field\"\n"
-        config_content+="inboundTag = \"tag_$((i + 1))\"\n"
-        config_content+="outboundTag = \"tag_$((i + 1))\"\n\n\n"
+
+        config_content+=$'\n'
     done
-    echo -e "$config_content" >/etc/xrayL/config.toml
+    echo "$config_content" >/etc/xrayL/config.json
     systemctl restart xrayL.service
     systemctl --no-pager status xrayL.service
     echo ""
