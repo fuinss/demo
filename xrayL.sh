@@ -42,16 +42,13 @@ config_xray() {
 
 	read -p "起始端口 (默认 $DEFAULT_START_PORT): " START_PORT
 	START_PORT=${START_PORT:-$DEFAULT_START_PORT}
-if [ "$config_type" == "socks" ]; then
-    # Remove the following lines that prompt for SOCKS username and password
-    # read -p "SOCKS 账号 (默认 $DEFAULT_SOCKS_USERNAME): " SOCKS_USERNAME
-    # SOCKS_USERNAME=${SOCKS_USERNAME:-$DEFAULT_SOCKS_USERNAME}
-    # read -p "SOCKS 密码 (默认 $DEFAULT_SOCKS_PASSWORD): " SOCKS_PASSWORD
-    # SOCKS_PASSWORD=${SOCKS_PASSWORD:-$DEFAULT_SOCKS_PASSWORD}
-    SOCKS_USERNAME=""
-    SOCKS_PASSWORD=""
-fi
-
+	if [ "$config_type" == "socks" ]; then
+	elif [ "$config_type" == "vmess" ]; then
+		read -p "UUID (默认随机): " UUID
+		UUID=${UUID:-$DEFAULT_UUID}
+		read -p "WebSocket 路径 (默认 $DEFAULT_WS_PATH): " WS_PATH
+		WS_PATH=${WS_PATH:-$DEFAULT_WS_PATH}
+	fi
 
 	for ((i = 0; i < ${#IP_ADDRESSES[@]}; i++)); do
 		config_content+="[[inbounds]]\n"
